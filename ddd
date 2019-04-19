@@ -1,3 +1,9 @@
 #!/bin/env tclsh
 
-puts "ddd"
+proc scan_dir {dir} {
+    puts "scan: ${dir}"
+    foreach object [glob -nocomplain -directory ${dir} -type f *] {puts "file: ${object}"}
+    foreach subdir [glob -nocomplain -directory ${dir} -type d *] {catch {scan_dir ${subdir}}}
+}
+
+foreach directory ${argv} {scan_dir ${directory}}
