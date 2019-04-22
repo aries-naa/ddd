@@ -1,11 +1,23 @@
 #!/bin/env tclsh
+package require md5
+
+array set files {}
 
 proc scan_dir {dir} {
-    puts "scan: ${dir}"
+    global files
+    puts "scan:${dir}"
 
     foreach object [glob -nocomplain -directory ${dir} -type f *] {
 	set is_link [catch {file link ${object}}]
-	if {${is_link} != 0} {puts "file: ${object}"}
+	if {${is_link} != 0} {
+	    set md5sum [md5::md5 -hex -file ${object}]
+	    if {[info exists files(${md5sum})] == 0} {
+		set files(${md5sum}) ${object}
+		puts "add:${md5sum}:${object}"
+	    } else {
+		puts "exists:$files(${md5sum}):${object}"
+	    }
+	}
     }
 
     foreach object [glob -nocomplain -directory ${dir} -type d *] {
@@ -17,8 +29,12 @@ proc scan_dir {dir} {
 if {[llength ${argv}] > 1} {
     set dest [lindex ${argv} end]
     set src [lrange ${argv} 0 end-1]
-    
+
     foreach directory ${src} {scan_dir ${directory}}
 } else {
     puts "ddd src1 src2 ... dest"
+}
+
+foreach md5sum [array names files] {
+    puts "copy:$files(${md5sum}):${dest}"
 }
